@@ -9,7 +9,7 @@ import com.datastax.spark.connector.{SparkCassandraITFlatSpecBase, _}
 import com.datastax.spark.connector.cql.{AuthConf, AuthConfFactory, CassandraConnectionFactory, CassandraConnector, CassandraConnectorConf, ClusteringColumn, DefaultConnectionFactory, NoAuthConf}
 import com.datastax.spark.connector.util.DriverUtil.toName
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.SaveMode
+import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.apache.spark.sql.cassandra._
 import org.apache.spark.sql.catalyst.analysis.NoSuchTableException
 import org.apache.spark.sql.functions._
@@ -387,13 +387,16 @@ class CassandraDataFrameSpec extends SparkCassandraITFlatSpecBase with DefaultCl
   }
 
   it should "allow to specify custom per-cluster settings" in {
-    sparkSession.conf.set("myCluster/spark.cassandra.connection.factory",
-      TestConnectionFactory.getClass.getName.split("\\$").last)
-    sparkSession.conf.set("myCluster/spark.cassandra.auth.conf.factory",
-      TestAuthFactory.getClass.getName.split("\\$").last)
-    sparkSession.conf.set("myCluster/spark.cassandra.test.custom.property", "specialValue")
+    // active session is used for consolidating confs
+    SparkSession.setActiveSession(spark)
 
-    sparkSession
+    spark.conf.set("myCluster/spark.cassandra.connection.factory",
+      TestConnectionFactory.getClass.getName.split("\\$").last)
+    spark.conf.set("myCluster/spark.cassandra.auth.conf.factory",
+      TestAuthFactory.getClass.getName.split("\\$").last)
+    spark.conf.set("myCluster/spark.cassandra.test.custom.property", "specialValue")
+
+    spark
       .read
       .format("org.apache.spark.sql.cassandra")
       .options(Map("table" -> "tuple_test1", "keyspace" -> ks, "cluster" -> "myCluster"))
