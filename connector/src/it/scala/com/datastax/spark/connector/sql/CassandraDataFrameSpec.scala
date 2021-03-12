@@ -395,6 +395,7 @@ class CassandraDataFrameSpec extends SparkCassandraITFlatSpecBase with DefaultCl
     spark.conf.set("myCluster/spark.cassandra.auth.conf.factory",
       TestAuthFactory.getClass.getName.split("\\$").last)
     spark.conf.set("myCluster/spark.cassandra.test.custom.property", "specialValue")
+    spark.conf.set("myCluster/spark.cassandra.connection.keepAliveMS", "0")
 
     spark
       .read
